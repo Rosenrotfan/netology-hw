@@ -1,24 +1,34 @@
 resource "yandex_vpc_network" "develop" {
   name = var.vpc_name
 }
-resource "yandex_vpc_subnet" "develop" {
-  name           = var.vpc_name
-  zone           = var.default_zone
+
+resource "yandex_vpc_subnet" "web" {
+  name           = var.vm_web_vpc_name
+  zone           = var.vm_web_zone
   network_id     = yandex_vpc_network.develop.id
-  v4_cidr_blocks = var.default_cidr
+  v4_cidr_blocks = var.vm_web_cidr
+}
+
+resource "yandex_vpc_subnet" "db" {
+  name           = var.vm_db_vpc_name
+  zone           = var.vm_db_zone
+  network_id     = yandex_vpc_network.develop.id
+  v4_cidr_blocks = var.vm_db_cidr
 }
 
 
 data "yandex_compute_image" "ubuntu" {
-  family = "ubuntu-2004-lts"
+  family = "${var.vm_os_family}"
 }
-resource "yandex_compute_instance" "platform" {
-  name        = "netology-develop-platform-web"
-  platform_id = "standart-v4"
+
+resource "yandex_compute_instance" "platform_web" {
+  name        = local.vmone
+  platform_id = var.vm_web_platform_id
+  zone        = var.vm_web_zone
   resources {
-    cores         = 1
-    memory        = 1
-    core_fraction = 5
+    cores         = lookup(var.vms_resources["web"], "cores")
+    memory        = lookup(var.vms_resources["web"], "memory")
+    core_fraction = lookup(var.vms_resources["web"], "core_fraction")
   }
   boot_disk {
     initialize_params {
@@ -29,13 +39,36 @@ resource "yandex_compute_instance" "platform" {
     preemptible = true
   }
   network_interface {
-    subnet_id = yandex_vpc_subnet.develop.id
+    subnet_id = yandex_vpc_subnet.web.id
     nat       = true
   }
 
-  metadata = {
-    serial-port-enable = 1
-    ssh-keys           = "ubuntu:${var.vms_ssh_root_key}"
+  metadata = local.vm_metadata
+
+}
+
+resource "yandex_compute_instance" "platform_db" {
+  name        = local.vmtwo
+  platform_id = var.vm_db_platform_id
+  zone        = var.vm_db_zone
+  resources {
+    cores         = lookup(var.vms_resources["db"], "cores")
+    memory        = lookup(var.vms_resources["db"], "memory")
+    core_fraction = lookup(var.vms_resources["db"], "core_fraction")
   }
+  boot_disk {
+    initialize_params {
+      image_id = data.yandex_compute_image.ubuntu.image_id
+    }
+  }
+  scheduling_policy {
+    preemptible = true
+  }
+  network_interface {
+    subnet_id = yandex_vpc_subnet.db.id
+    nat       = true
+  }
+
+  metadata = local.vm_metadata
 
 }
