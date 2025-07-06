@@ -1,8 +1,4 @@
 ###cloud vars
-variable "token" {
-  type        = string
-  description = "OAuth-token; https://cloud.yandex.ru/docs/iam/concepts/authorization/oauth-token"
-}
 
 variable "cloud_id" {
   type        = string
@@ -19,6 +15,7 @@ variable "default_zone" {
   default     = "ru-central1-a"
   description = "https://cloud.yandex.ru/docs/overview/concepts/geo-scope"
 }
+
 variable "default_cidr" {
   type        = list(string)
   default     = ["10.0.1.0/24"]
@@ -53,5 +50,8 @@ variable "vm_db_name" {
   description = "example vm_db_ prefix"
 }
 
-
-
+#new
+variable "ssh_key" {
+  description = "SSH1 public key"
+  type        = string
+}
