@@ -3,6 +3,7 @@ resource "yandex_compute_instance" "web" {
     name        = "web-${count.index + 1}"
     platform_id = var.vms_resources["web"].plat
     zone        = var.vms_resources["web"].zone
+    depends_on = [yandex_compute_instance.db]
     resources {
         cores         = var.vms_resources["web"].cores
         memory        = var.vms_resources["web"].memory
